@@ -1,0 +1,27 @@
+#chat {
+width: 300;
+height: 100;
+max-height: 300px;
+margin-top: 20;
+border: solid;
+border-color: rgb(184, 177, 184);
+overflow: scroll;
+    
+}
+
+.printing {
+    -webkit-animation: blink1 1.5s linear infinite;
+    animation: blink1 1.5s linear infinite;
+  }
+  @-webkit-keyframes blink1 {
+    0% { color: rgba(34, 34, 34, 1); }
+    50% { color: rgba(34, 34, 34, 0); }
+    100% { color: rgba(34, 34, 34, 1); }
+  }
+  @keyframes blink1 {
+    0% { color: rgba(34, 34, 34, 1); }
+    50% { color: rgba(34, 34, 34, 0); }
+    100% { color: rgba(34, 34, 34, 1); }
+  }
+
+

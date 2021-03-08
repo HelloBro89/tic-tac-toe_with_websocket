@@ -1,0 +1,29 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <link rel="stylesheet" href="stylesheet.css" type="text/css">
+
+</head>
+<script src="/socket.io/socket.io.js"></script>
+
+<body>
+
+    <canvas style="position: relative; z-index: 1;" id="myCanvas" width="300" height="300"></canvas>
+
+
+    <div class="container" id="main" style="position: relative; z-index: 2; width: 300px; height: 300px;">
+    </div>
+
+    <div id="chat"></div>
+
+    <div><input id="string" type="text" autocomplete="off" style="margin-top: 20px;">
+        <input type="button" style="margin-left: 20px;" id="send" value="send">
+        <input type="button" style="margin-left: 20px;" id="clearChat" value="clearChat">
+    </div>
+    <script src="./script.js"></script>
+
+</body>
+
+</html>
