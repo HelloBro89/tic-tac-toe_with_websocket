@@ -15,17 +15,22 @@ let name = 'Player 1';
 io.on('connection', function (socket) {
     console.log('A user connected');
 
+    socket.on("resName", (data) => {
+        name = (data.myName === 'Player 1') ? "Player 2" : "Player 1";
+        console.log(name);
+    });
+
     socket.emit("PlayerName", name);
 
     name = (name === 'Player 1') ? "Player 2" : "Player 1";
 
     socket.on('sendData', (data) => {
-
         io.sockets.emit('sendRes', data);
     })
 
-    socket.on('disconnect', function () {
+    socket.on('disconnect', function (data) {
         console.log('A user disconnected');
+        io.sockets.emit('checkWhoStayed');
     });
 });
 

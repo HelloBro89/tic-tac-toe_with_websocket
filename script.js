@@ -16,6 +16,11 @@ let send = document.getElementById("send");
 let string = document.getElementById("string");
 let clearChat = document.getElementById('clearChat');
 
+socket.on('checkWhoStayed', () => {
+    socket.emit("resName", { myName: player });
+});
+
+
 clearChat.onclick = () => {
 
     while (chat.firstChild) {
