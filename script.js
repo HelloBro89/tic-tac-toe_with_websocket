@@ -16,10 +16,19 @@ let send = document.getElementById("send");
 let string = document.getElementById("string");
 let clearChat = document.getElementById('clearChat');
 
+for (let i = 0; i < 9; i++) {
+    let div = document.createElement("div");
+    div.style.cssText = `float: left;
+        width: 33.333%;
+        height: 33.333%;`;
+    div.className = `${i}`;
+    div.id = `${i}`;
+    main.append(div);
+};
+
 socket.on('checkWhoStayed', () => {
     socket.emit("resName", { myName: player });
 });
-
 
 clearChat.onclick = () => {
 
@@ -45,16 +54,6 @@ socket.on('PlayerName', (data) => {
     player = data;
     alert(player);
 })
-
-for (let i = 0; i < 9; i++) {
-    let div = document.createElement("div");
-    div.style.cssText = `float: left;
-        width: 33.333%;
-        height: 33.333%;`;
-    div.className = `${i}`;
-    div.id = `${i}`;
-    main.append(div);
-}
 
 function drawMarkup() {
     ctx.beginPath();
@@ -98,6 +97,12 @@ socket.on('sendRes', (data) => {
         chat.scrollTop = chat.scrollHeight;
         return;
     }
+
+    if (data.divNum !== undefined) {
+        document.getElementById(`${data.divNum}`).className = data.class;
+        bool = data.bool;
+    };
+
     if (data.checkPlayer === "Player 1") {
         ctx.beginPath();
         ctx.moveTo(data.x, data.y);
@@ -107,26 +112,27 @@ socket.on('sendRes', (data) => {
         ctx.lineWidth = 2;
         ctx.strokeStyle = "red";
         ctx.stroke();
-        bool = true;
-        console.log('check')
+        bool = data.bool;
+
     } else if (data.checkPlayer === "Player 2") {
         ctx.beginPath();
         ctx.arc(data.x, data.y, 30, 0, 2 * Math.PI);
         ctx.lineWidth = 2;
         ctx.strokeStyle = "blue";
         ctx.stroke();
-        bool = false;
+        bool = data.bool;
 
     } else if (data.checkPlayer === 'Finish') {
         crossOut(data.x, data.y, data.x1, data.y1, data.x2, data.y2);
         setTimeout(clear, 2000);
         alert(data.name + "  WON!!!");
         bool = (data.queue === 1) ? false : true;
+        queue = data.queue;
     }
 })
 
 main.addEventListener("mouseup", (e) => {
-
+    console.log(queue);
     let clickTarget = e.target;
 
     let x =
@@ -162,13 +168,16 @@ main.addEventListener("mouseup", (e) => {
             canvas.getBoundingClientRect().top -
             20;
 
-        clickTarget.className = "cross";
 
         socket.emit("sendData", {
             x: x, y: y, x1: x1, y1: y1, x2: x2, y2: y2,
-            checkPlayer: "Player 1"
-        });
+            checkPlayer: "Player 1",
+            divNum: clickTarget.id,
+            class: "cross",
+            bool: true
 
+        });
+        clickTarget.className = "cross";
 
     } else if (player === "Player 2") {
 
@@ -183,11 +192,17 @@ main.addEventListener("mouseup", (e) => {
             clickTarget.getBoundingClientRect().height / 2 -
             canvas.getBoundingClientRect().top;
 
-        clickTarget.className = "circle";
+
 
         socket.emit("sendData", {
-            x: x, y: y, checkPlayer: "Player 2"
+            x: x, y: y,
+            checkPlayer: "Player 2",
+            divNum: clickTarget.id,
+            class: "circle"
+            ,
+            bool: false
         });
+        clickTarget.className = "circle";
     }
 
     let clickRow = Math.trunc(clickTarget.id / 3);
@@ -216,6 +231,7 @@ main.addEventListener("mouseup", (e) => {
         clicks.push(main.children[3 * i + 2 - i]);
         finish(clicks);
     }
+
 });
 
 function finish(massive) {
@@ -227,17 +243,20 @@ function finish(massive) {
     let y;
 
     if (massive.length < 3) {
+
         return;
     }
 
     for (let i = 0; i < massive.length - 1; i++) {
+
         if (massive[i].className === massive[i + 1].className) {
             num++;
-            queue = (queue === 1) ? 2 : 1;
-            let name = (massive[0].className === "cross") ? "Player 1" : "Player 2"
-            if (num === massive.length - 1) {
 
+            let name = (massive[0].className === "cross") ? "Player 1" : "Player 2";
+
+            if (num === massive.length - 1) {
                 for (let i = 0; i < massive.length; i++) {
+
                     if (i === 0) {
                         x =
                             massive[i].getBoundingClientRect().right -
@@ -266,9 +285,13 @@ function finish(massive) {
                             massive[i].getBoundingClientRect().height / 2 -
                             canvas.getBoundingClientRect().top;
 
+                        queue = (queue === 1) ? 2 : 1;
+                        console.log(queue)
                         socket.emit("sendData", {
                             x: x, y: y, x1: x1, y1: y1, x2: x2, y2: y2,
-                            checkPlayer: "Finish", name: name, queue: queue
+                            checkPlayer: "Finish",
+                            name: name,
+                            queue: queue
                         });
                         massive.splice(0);
 
