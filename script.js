@@ -16,6 +16,8 @@ let send = document.getElementById("send");
 let string = document.getElementById("string");
 let clearChat = document.getElementById('clearChat');
 
+
+
 for (let i = 0; i < 9; i++) {
     let div = document.createElement("div");
     div.style.cssText = `float: left;
@@ -31,10 +33,10 @@ socket.on('checkWhoStayed', () => {
 });
 
 clearChat.onclick = () => {
-
     while (chat.firstChild) {
         chat.firstChild.remove()
     }
+    sessionStorage.removeItem('chat');
 }
 
 string.onfocus = () => {
@@ -71,6 +73,86 @@ function drawMarkup() {
 }
 drawMarkup();
 
+//                      ** FOR DEV **
+// function clearLocal() {     
+//     sessionStorage.clear()
+// }
+
+function drawCross(x, y, x1, y1, x2, y2) {
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x1, y1);
+    ctx.moveTo(x2, y);
+    ctx.lineTo(x, y2);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "red";
+    ctx.stroke();
+}
+
+function drawCircle(x, y) {
+    ctx.beginPath();
+    ctx.arc(x, y, 30, 0, 2 * Math.PI);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "blue";
+    ctx.stroke();
+}
+
+function parseStorage() {
+    if (sessionStorage.getItem('chat') !== null) {
+        console.log('ya tut')
+        let mas = JSON.parse(sessionStorage.getItem('chat'));
+        for (let sort of mas) {
+            createDivInChat(sort.color, sort.player, sort.text);
+        }
+    }
+
+    if (sessionStorage.getItem('coor') === null) return;
+
+    if (sessionStorage.getItem('queue') !== null) {
+        queue = sessionStorage.getItem('queue');
+    };
+
+    bool = JSON.parse(sessionStorage.getItem('bool'));
+    let mas = JSON.parse(sessionStorage.getItem('coor'));
+    for (let sort of mas) {
+        if (sort.x2 === undefined) {
+            drawCircle(sort.x, sort.y);
+        } else {
+            drawCross(sort.x, sort.y, sort.x1, sort.y1, sort.x2, sort.y2);
+        }
+        document.getElementById(`${sort.divNum}`).className = sort.class;
+    }
+}
+parseStorage();
+
+function saveDataCollection(data, boolStatus) {
+    if (sessionStorage.getItem('coor') === null) {
+        let json = JSON.stringify([data]);
+        sessionStorage.setItem("coor", json);
+
+    } else {
+        let mas = JSON.parse(sessionStorage.getItem('coor'));
+        mas.push(data);
+        mas = JSON.stringify(mas);
+        sessionStorage.setItem("coor", mas);
+    }
+    sessionStorage.setItem("bool", boolStatus);
+}
+
+function createDivInChat(col, pl, text) {
+    let div = document.createElement('div');
+    div.style.color = col;
+    div.textContent = pl;
+
+    let playerText = document.createElement('span');
+    playerText.style.color = "black";
+    playerText.textContent = ": " + text;
+
+    chat.append(div);
+    div.append(playerText);
+    chat.scrollTop = chat.scrollHeight;
+}
+
 socket.on('sendRes', (data) => {
 
     if (data.activity === true && data.player !== player) {
@@ -84,55 +166,43 @@ socket.on('sendRes', (data) => {
         return;
     }
     if (data.text) {
-        let div = document.createElement('div');
-        div.style.color = data.color;
-        div.textContent = data.player;
+        createDivInChat(data.color, data.player, data.text);
+        if (sessionStorage.getItem("chat") === null) {
+            let objChat = JSON.stringify([{ color: data.color, player: data.player, text: data.text }]);
 
-        let playerText = document.createElement('span');
-        playerText.style.color = "black";
-        playerText.textContent = ": " + data.text;
-
-        chat.append(div);
-        div.append(playerText);
-        chat.scrollTop = chat.scrollHeight;
+            sessionStorage.setItem('chat', objChat);
+        } else {
+            let objChat = JSON.parse(sessionStorage.getItem('chat'));
+            objChat.push({ color: data.color, player: data.player, text: data.text });
+            objChat = JSON.stringify(objChat);
+            sessionStorage.setItem('chat', objChat);
+        }
         return;
     }
 
-    if (data.divNum !== undefined) {
-        document.getElementById(`${data.divNum}`).className = data.class;
-        bool = data.bool;
-    };
-
     if (data.checkPlayer === "Player 1") {
-        ctx.beginPath();
-        ctx.moveTo(data.x, data.y);
-        ctx.lineTo(data.x1, data.y1);
-        ctx.moveTo(data.x2, data.y);
-        ctx.lineTo(data.x, data.y2);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "red";
-        ctx.stroke();
+
+        document.getElementById(`${data.crossCoor.divNum}`).className = data.crossCoor.class;
+        drawCross(data.crossCoor.x, data.crossCoor.y, data.crossCoor.x1, data.crossCoor.y1, data.crossCoor.x2, data.crossCoor.y2);
+        saveDataCollection(data.crossCoor, data.bool);
         bool = data.bool;
 
     } else if (data.checkPlayer === "Player 2") {
-        ctx.beginPath();
-        ctx.arc(data.x, data.y, 30, 0, 2 * Math.PI);
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "blue";
-        ctx.stroke();
+        document.getElementById(`${data.circleCoor.divNum}`).className = data.circleCoor.class;
+        drawCircle(data.circleCoor.x, data.circleCoor.y);
+        saveDataCollection(data.circleCoor, data.bool);
         bool = data.bool;
 
     } else if (data.checkPlayer === 'Finish') {
-        crossOut(data.x, data.y, data.x1, data.y1, data.x2, data.y2);
+        crossOut(data.finishCoor.x, data.finishCoor.y, data.finishCoor.x1, data.finishCoor.y1, data.finishCoor.x2, data.finishCoor.y2);
         setTimeout(clear, 2000);
         alert(data.name + "  WON!!!");
-        bool = (data.queue === 1) ? false : true;
         queue = data.queue;
+        bool = (data.queue == 1) ? false : true;
     }
 })
 
 main.addEventListener("mouseup", (e) => {
-    console.log(queue);
     let clickTarget = e.target;
 
     let x =
@@ -168,20 +238,19 @@ main.addEventListener("mouseup", (e) => {
             canvas.getBoundingClientRect().top -
             20;
 
-
         socket.emit("sendData", {
-            x: x, y: y, x1: x1, y1: y1, x2: x2, y2: y2,
+            crossCoor: {
+                x: x, y: y, x1: x1, y1: y1, x2: x2, y2: y2,
+                divNum: clickTarget.id, class: "cross"
+            },
             checkPlayer: "Player 1",
-            divNum: clickTarget.id,
-            class: "cross",
             bool: true
-
         });
         clickTarget.className = "cross";
 
     } else if (player === "Player 2") {
 
-        if (bool === false) { return };
+        if (bool === false) return;
 
         x =
             clickTarget.getBoundingClientRect().right -
@@ -192,14 +261,12 @@ main.addEventListener("mouseup", (e) => {
             clickTarget.getBoundingClientRect().height / 2 -
             canvas.getBoundingClientRect().top;
 
-
-
         socket.emit("sendData", {
-            x: x, y: y,
+            circleCoor: {
+                x: x, y: y,
+                divNum: clickTarget.id, class: "circle"
+            },
             checkPlayer: "Player 2",
-            divNum: clickTarget.id,
-            class: "circle"
-            ,
             bool: false
         });
         clickTarget.className = "circle";
@@ -286,15 +353,15 @@ function finish(massive) {
                             canvas.getBoundingClientRect().top;
 
                         queue = (queue === 1) ? 2 : 1;
-                        console.log(queue)
+
                         socket.emit("sendData", {
-                            x: x, y: y, x1: x1, y1: y1, x2: x2, y2: y2,
+                            finishCoor:
+                                { x: x, y: y, x1: x1, y1: y1, x2: x2, y2: y2 },
                             checkPlayer: "Finish",
                             name: name,
                             queue: queue
                         });
                         massive.splice(0);
-
                     }
                 }
             }
@@ -305,7 +372,10 @@ function finish(massive) {
     }
 }
 
-function clear(massive) {
+function clear() {
+    sessionStorage.removeItem('coor');
+    sessionStorage.removeItem('bool');
+    sessionStorage.setItem('queue', queue);
     ctx.clearRect(0, 0, 300, 300);
     num = 0;
     for (let i = 0; i < main.children.length; i++) {

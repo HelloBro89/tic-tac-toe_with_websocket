@@ -2,14 +2,15 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Document</title>
+    <title>tic-tac-toe</title>
     <link rel="stylesheet" href="stylesheet.css" type="text/css">
 
 </head>
 <script src="/socket.io/socket.io.js"></script>
 
 <body>
-
+    <!--                            FOR DEV                              -->
+    <!-- <div><input type="button" onclick="clearLocal()" style="margin-left: 20px;" value="clearLocal"></div> -->
     <canvas style="position: relative; z-index: 1;" id="myCanvas" width="300" height="300"></canvas>
 
 
@@ -20,7 +21,9 @@
 
     <div><input id="string" type="text" autocomplete="off" style="margin-top: 20px;">
         <input type="button" style="margin-left: 20px;" id="send" value="send">
+
         <input type="button" style="margin-left: 20px;" id="clearChat" value="clearChat">
+
     </div>
     <script src="./script.js"></script>
 
